@@ -2,9 +2,10 @@ import Router from 'express';
 
 const router = Router();
 
-import { createUser, deleteUserById, getAllUsers, getUserById } from '../controllers/userControllers.js';
+import { createUser, deleteUserById, getAllUsers, getUserById, loginUser } from '../controllers/userControllers.js';
+import { authenticate } from '../middleware/auth.js';
 
-router.get('/users', getAllUsers);
+router.get('/users', authenticate, getAllUsers);
 router.post('/user', createUser);
 
 
@@ -12,7 +13,9 @@ router.post('/user', createUser);
 // router.delete('/users/:id',deleteUserById )
 
 router.route('/users/:id')
-    .get(getUserById)
+    .get(authenticate,getUserById)
     .delete(deleteUserById);
+
+    router.route('/login').post(loginUser);
 
 export default router;
