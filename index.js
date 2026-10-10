@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import connectDB from './config/db.js';
 
 import userRoutes from './routes/userRoutes.js';
+import errorMiddleware from './middleware/error.middleware.js';
 
 const app = express();
 
@@ -17,6 +18,15 @@ connectDB();
 
 // routing 
  app.use('/api/v1/', userRoutes);
+
+ app.use((req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route not found'
+    });
+});
+
+ app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

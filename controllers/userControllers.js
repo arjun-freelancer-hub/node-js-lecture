@@ -1,44 +1,35 @@
 import User from "../models/userModel.js";
+import AppError from "../utils/AppError.js";
+import catchAsync from "../utils/catchAsync.js";
 import { generateToken } from "../utils/token.js";
 
-export const getAllUsers = async (req, res) => {
-    try {
-        const allUsers = await User.find();
-        res.status(200).json({
-            message: 'All users fetched successfully',
-            users: allUsers
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(404).json({
-            message: 'Error fetching users',
-            error: error.message
-        })
-    }
+export const getAllUsers = catchAsync(async (req, res) => {
+    const allUsers = await User.find();
+    res.status(200).json({
+        message: 'All users fetched successfully',
+        users: allUsers
+    });
+})
 
-}
-
-export const createUser = async (req, res) => {
-
-    try {
+export const createUser =catchAsync( async (req, res) => {
 
         const { name, age, city, country, hair, email, password } = req.body; // destructuring the request body to extract user details
 
 
         if (!name) {
-            throw new Error('Name is required');
+            throw new AppError('Name is required', 400);
         }
 
         if (!age) {
-            throw new Error('Age is required');
+            throw new AppError('Age is required', 400);
         }
 
         if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+            throw new AppError('Password must be at least 8 characters long', 400);
         }
 
         if (!email) {
-            throw new Error('Email is required');
+            throw new AppError('Email is required', 400);
         }
 
         const user = await User.create({
@@ -56,25 +47,20 @@ export const createUser = async (req, res) => {
             message: 'User created successfully',
             user: user
         });
-    } catch (error) {
-        console.error(error);
-        res.status(404).json({
-            message: 'Error creating user',
-            error: error.message
-        })
-    }
-}
+    
+})
 
 export const getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
         if (!userId) {
-            throw new Error('User ID is required');
+            throw new AppError('User ID is required', 400);
         }
         const user = await User.findById(userId);
 
         if (!user) {
-            throw new Error('User not found');
+            throw new AppError('User not found', 404);
+            // throw new Error('User not found');
         }
 
         res.status(200).json({
@@ -85,7 +71,7 @@ export const getUserById = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(404).json({
+        res.status(500).json({
             message: 'Error fetching user',
             error: error.message
         })
@@ -97,7 +83,7 @@ export const deleteUserById = async (req, res) => {
         const userId = req.params.id;
 
         if (!userId) {
-            throw new Error('User ID is required');
+            throw new AppError('User ID is required', 400);
         }
         const user = await User.findByIdAndDelete(userId);
 
@@ -120,7 +106,7 @@ export const loginUser = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            throw new Error('Email and password are required');
+            throw new AppError('Email and password are required', 400);
         }
 
         const user = await User.findOne({ email: email.toLowerCase() })
@@ -128,11 +114,11 @@ export const loginUser = async (req, res) => {
         console.log(user);
 
         if (!user) {
-            throw new Error('User not found');
+            throw new AppError('User not found', 404);
         }
 
         if (user.password !== password) {
-            throw new Error('Invalid password');
+            throw new AppError('Invalid password', 400);
         }
 
         user.password = undefined; // remove password from user object before sending response
