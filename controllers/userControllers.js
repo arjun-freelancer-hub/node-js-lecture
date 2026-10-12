@@ -11,43 +11,45 @@ export const getAllUsers = catchAsync(async (req, res) => {
     });
 })
 
-export const createUser =catchAsync( async (req, res) => {
+export const createUser = catchAsync(async (req, res) => {
 
-        const { name, age, city, country, hair, email, password } = req.body; // destructuring the request body to extract user details
-
-
-        if (!name) {
-            throw new AppError('Name is required', 400);
-        }
-
-        if (!age) {
-            throw new AppError('Age is required', 400);
-        }
-
-        if (password.length < 8) {
-            throw new AppError('Password must be at least 8 characters long', 400);
-        }
-
-        if (!email) {
-            throw new AppError('Email is required', 400);
-        }
-
-        const user = await User.create({
-            name,
-            age,
-            city,
-            country,
-            hair,
-            email: email?.toLowerCase(),
-            password
-        });
+    const { name, age, city, country, hair, email, password } = req.body; // destructuring the request body to extract user details
 
 
-        res.status(200).json({
-            message: 'User created successfully',
-            user: user
-        });
-    
+    if (!name) {
+        throw new AppError('Name is required', 400);
+    }
+
+    if (!age) {
+        throw new AppError('Age is required', 400);
+    }
+
+    if (password.length < 8) {
+        throw new AppError('Password must be at least 8 characters long', 400);
+    }
+
+    if (!email) {
+        throw new AppError('Email is required', 400);
+    }
+    console.log("before save in controller")
+    const user = await User.create({
+        name,
+        age,
+        city,
+        country,
+        hair,
+        email: email?.toLowerCase(),
+        password
+    });
+
+    console.log("afeter save document")
+
+
+    res.status(200).json({
+        message: 'User created successfully',
+        user: user
+    });
+
 })
 
 export const getUserById = async (req, res) => {
@@ -116,10 +118,18 @@ export const loginUser = async (req, res) => {
         if (!user) {
             throw new AppError('User not found', 404);
         }
+        // console.log(user.password, 'user ka password', password, 'input password')
+        //         if (user.password !== password) {
+        //             throw new AppError('Invalid password', 400);
+        //         }
 
-        if (user.password !== password) {
+        const isPasswordMatched = await user.comparePassword(password);
+
+        if (!isPasswordMatched) {
             throw new AppError('Invalid password', 400);
         }
+
+
 
         user.password = undefined; // remove password from user object before sending response
         const token = generateToken(user); // generate token for the user
